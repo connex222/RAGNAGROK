@@ -41,17 +41,19 @@ function startServer({
   app.get('/play', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'play.html')));
   // Lists the artwork in public/img so screens only ask for images that exist.
   const IMG_DIR = path.join(PUBLIC_DIR, 'img');
-  let artCache = { at: 0, files: [] };
+  const AUDIO_DIR = path.join(PUBLIC_DIR, 'audio');
+  const list = (dir, re) => { try { return fs.readdirSync(dir).filter(f => re.test(f)); } catch (e) { return []; } };
+  let artCache = { at: 0, files: [], audio: [] };
   app.get('/art.json', (req, res) => {
     if (Date.now() - artCache.at > 30000) {
-      let files = [];
-      try {
-        files = fs.readdirSync(IMG_DIR).filter(f => /\.(png|webp|jpe?g|svg)$/i.test(f));
-      } catch (e) { /* no img folder yet */ }
-      artCache = { at: Date.now(), files };
+      artCache = {
+        at: Date.now(),
+        files: list(IMG_DIR, /\.(png|webp|jpe?g|svg)$/i),
+        audio: list(AUDIO_DIR, /\.(mp3|m4a|ogg|wav)$/i)
+      };
     }
     res.set('Cache-Control', 'no-cache');
-    res.json({ files: artCache.files });
+    res.json({ files: artCache.files, audio: artCache.audio });
   });
 
   app.get('/data/cards.json', (req, res) => {

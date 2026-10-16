@@ -21,6 +21,26 @@
   const RES_ICON = { compost: '🍄', fertilizer: '🌾', sprinklers: '🔥', turf: '🌳', gnomeDust: '✨', scorched: '🥀' };
   const PAD = 1.15;
 
+  /* One icon system for every screen: the artwork if it exists, otherwise an emoji.
+     Slot names match the files in public/img (without the extension). */
+  const FALLBACK = {
+    'res-compost': '🍄', 'res-fertilizer': '🌾', 'res-sprinklers': '🔥', 'res-turf': '🌳', 'res-gnomeDust': '✨',
+    'deity-thor': '⚡', 'deity-loki': '🎭', 'deity-freya': '🌸', 'deity-hel': '☠️',
+    'deity-odin': '👁️', 'deity-heimdall': '🔭', 'deity-frigg': '📋', 'deity-njord': '⛲',
+    mower: '🚜', 'piece-shack': '🛖', 'piece-manor': '🏰', trophy: '🦩',
+    'icon-path': '🛤️', 'icon-perk': '📜', 'icon-cards': '🃏', 'icon-militia': '🪖',
+    'icon-longestPath': '🛤️', 'icon-bank': '🏦', 'icon-dice': '🎲'
+  };
+
+  function icon(art, key, cls) {
+    const url = art && art[key];
+    if (url) {
+      const round = key.indexOf('deity-') === 0 ? ' gi-round' : '';
+      return `<img class="gi${round}${cls ? ' ' + cls : ''}" src="${url}" alt="" aria-hidden="true">`;
+    }
+    return FALLBACK[key] || '';
+  }
+
   const f3 = n => n.toFixed(3);
 
   function corners(h, k) {
@@ -109,7 +129,13 @@
       const len = Math.hypot(e.x, e.y) || 1;
       const x = e.x + (e.x / len) * 0.42;
       const y = e.y + (e.y / len) * 0.42;
-      marks += `<text class="port" x="${f3(x)}" y="${f3(y)}" pointer-events="none">${p.resource ? RES_ICON[p.resource] + '2:1' : '3:1'}</text>`;
+      const resArt = p.resource && art['res-' + p.resource];
+      if (resArt) {
+        marks += `<image href="${resArt}" x="${f3(x - 0.36)}" y="${f3(y - 0.15)}" width=".3" height=".3" pointer-events="none"/>`;
+        marks += `<text class="port" x="${f3(x + 0.13)}" y="${f3(y)}" pointer-events="none">2:1</text>`;
+      } else {
+        marks += `<text class="port" x="${f3(x)}" y="${f3(y)}" pointer-events="none">${p.resource ? RES_ICON[p.resource] + '2:1' : '3:1'}</text>`;
+      }
     });
 
     Object.keys(board.paths).forEach(eid => {
@@ -186,9 +212,16 @@
   /* Turns /art.json into { slotName: url }. 'hex-turf.png' → art['hex-turf'] */
   function artMap(list) {
     const out = {};
-    ((list && list.files) || []).forEach(f => { out[f.replace(/\.[a-z]+$/i, '')] = '/img/' + f; });
+    ((list && list.files) || []).forEach(f => { out[f.replace(/\.[a-z0-9]+$/i, '')] = '/img/' + f; });
     return out;
   }
 
-  global.RagnaBoard = { svg, position, bounds, corners, artMap, TERRAIN_COLOUR, RES_ICON };
+  /* 'music-intro.mp3' → { 'music-intro': '/audio/music-intro.mp3' } */
+  function audioMap(list) {
+    const out = {};
+    ((list && list.audio) || []).forEach(f => { out[f.replace(/\.[a-z0-9]+$/i, '')] = '/audio/' + f; });
+    return out;
+  }
+
+  global.RagnaBoard = { svg, position, bounds, corners, artMap, audioMap, icon, FALLBACK, TERRAIN_COLOUR, RES_ICON };
 })(typeof window !== 'undefined' ? window : globalThis);

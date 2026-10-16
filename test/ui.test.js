@@ -181,9 +181,12 @@ async function main() {
     tap(p, qa(p, '[data-act="avatar"]')[i + 1]);
     tap(p, q(p, '[data-act="join"]'));
     await waitFor(() => view(p) && view(p).me && !q(p, '#app').hidden, `${p.label} to join`);
+    await waitFor(() => !q(p, '#sheetWrap').hidden && q(p, '#sheet').dataset.sheet === 'rules', `${p.label} How to Play on joining`);
+    if (i === 1) tap(p, q(p, '[data-act="rulesHide"]')); // this player ticks "Don't show this again"
+    tap(p, q(p, '[data-act="closeSheet"]'));
     phones.push(p);
   }
-  console.log('  ✔ three phones joined through the join screen');
+  console.log('  ✔ three phones joined through the join screen, each shown How to Play');
   await waitFor(() => qa(tvp, '#lobbyPlayers .pchip:not(.empty)').length === 3, 'TV lobby to list 3 players');
   console.log('  ✔ TV lobby shows every player as they join');
 
@@ -245,6 +248,9 @@ async function main() {
   phones[1].win.close();
   const reopened = await openPhoneWithStorage(base, room.code, store);
   await waitFor(() => view(reopened) && view(reopened).me && view(reopened).me.seat === 1, 'reloaded phone to rejoin seat 2');
+  await sleep(300);
+  assert.ok(q(reopened, '#sheetWrap').hidden, '"Don\'t show this again" was ignored after a reload');
+  console.log('  ✔ "Don\'t show this again" is remembered after a reload');
   console.log('  ✔ a reloaded phone rejoins its own seat with no typing');
 
   if (errors.length) throw new Error('Page error:\n' + errors.join('\n'));
@@ -263,7 +269,7 @@ async function openPhoneWithStorage(base, code, stored) {
   vc.on('jsdomError', e => errors.push(`reloaded: ${e.message}`));
   const dom = await JSDOM.fromURL(`${base}/play?room=${code}`, {
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true, virtualConsole: vc,
-    beforeParse(win) { win.localStorage.setItem('ragnagrok.player', stored); }
+    beforeParse(win) { win.localStorage.setItem('ragnagrok.player', stored); win.localStorage.setItem('ragnagrok.rulesHidden', 'true'); }
   });
   const p = { dom, win: dom.window, doc: dom.window.document, label: 'reloaded' };
   await waitFor(() => p.win.__rg, 'reloaded page');

@@ -24,23 +24,24 @@ button { font:inherit; color:inherit; cursor:pointer; border:0; }
 .screen { position:absolute; inset:0; padding:54px 96px; }
 
 /* ---------- lobby ---------- */
-#lobby { display:grid; grid-template-columns:520px 1fr; grid-template-rows:auto 1fr auto; gap:28px 80px; }
-#logo { grid-column:1/-1; }
-#logo .t { font-weight:900; font-size:104px; line-height:.9; color:var(--primary); letter-spacing:-.02em; }
+#lobby { display:grid; grid-template-columns:480px 1fr; gap:0 70px; padding-top:44px; }
+#lobbyLeft { display:flex; flex-direction:column; gap:26px; }
+#logo { }
+#logo .t { font-weight:900; font-size:88px; line-height:.9; color:var(--primary); letter-spacing:-.02em; }
 #logo .s { color:var(--muted); font-size:36px; margin-top:8px; }
-#logo img { max-height:300px; max-width:100%; margin-top:-20px; }
-#qrBox { background:#fff; border-radius:28px; padding:26px; align-self:start; }
+#logo img { width:100%; display:block; }
+#qrBox { background:#fff; border-radius:28px; padding:22px; }
 #qrBox img { width:100%; display:block; image-rendering:pixelated; }
 #joinInfo .label { color:var(--muted); font-size:30px; }
-#joinInfo .code { font-size:180px; font-weight:900; letter-spacing:.14em; line-height:1; margin:6px 0 18px; }
+#joinInfo .code { font-size:150px; font-weight:900; letter-spacing:.14em; line-height:1; margin:4px 0 12px; }
 #joinInfo .url { font-size:32px; color:var(--warn); word-break:break-all; }
-#lobbyPlayers { display:flex; flex-wrap:wrap; gap:18px; margin-top:36px; }
+#lobbyPlayers { display:flex; flex-wrap:wrap; gap:14px; margin-top:16px; }
 .pchip { display:flex; align-items:center; gap:14px; background:var(--surface); border:3px solid var(--line); border-radius:22px; padding:12px 22px 12px 14px; font-size:34px; font-weight:700; }
 .pchip .av { font-size:46px; }
 .pchip.empty { opacity:.35; border-style:dashed; font-weight:400; }
 @media (prefers-reduced-motion: no-preference) { .pchip.new { animation:pop .5s cubic-bezier(.2,1.6,.4,1); } }
 @keyframes pop { from { transform:scale(.3); opacity:0; } }
-#lobbyFoot { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; color:var(--muted); }
+#lobbyFoot { position:absolute; left:96px; right:96px; bottom:30px; display:flex; justify-content:space-between; align-items:center; color:var(--muted); }
 .smallbtn { background:var(--surface2); border:2px solid var(--line); border-radius:16px; padding:12px 22px; font-size:24px; }
 
 /* ---------- draft ---------- */
@@ -116,7 +117,7 @@ button { font:inherit; color:inherit; cursor:pointer; border:0; }
 #bankBox span { white-space:nowrap; }
 
 #ticker { position:absolute; left:0; right:0; bottom:0; height:118px; display:flex; align-items:center; gap:24px; padding:0 40px;
-  background:linear-gradient(rgba(31,21,48,.85), var(--bg2)); border-top:3px solid var(--line); font-size:28px; overflow:hidden; }
+  background:linear-gradient(rgba(31,21,48,.85), var(--bg2)); border-top:3px solid var(--line); font-size:28px; overflow:hidden; padding-right:420px; }
 #ticker .lbl { color:var(--warn); font-weight:900; white-space:nowrap; }
 #ticker .offers { display:flex; gap:18px; overflow:hidden; flex:1; }
 .offer { background:var(--surface); border-radius:16px; padding:10px 18px; white-space:nowrap; }
@@ -147,24 +148,63 @@ button { font:inherit; color:inherit; cursor:pointer; border:0; }
 #over td { padding:12px 8px; border-bottom:2px solid var(--line); }
 #over td:last-child { text-align:right; font-weight:900; }
 #over .stats { margin-top:26px; color:var(--muted); font-size:28px; display:flex; gap:40px; flex-wrap:wrap; }
-#soundGate { position:absolute; right:40px; bottom:40px; z-index:60; background:var(--primary); color:var(--on-primary); font-weight:900; padding:20px 30px; border-radius:20px; font-size:30px; }
+#soundGate { position:absolute; left:40px; bottom:24px; z-index:60; background:var(--primary); color:var(--on-primary); font-weight:900; padding:20px 30px; border-radius:20px; font-size:30px; }
 #conn { position:absolute; left:0; right:0; top:0; z-index:70; background:var(--warn); color:#1a1226; text-align:center; font-weight:900; padding:10px; font-size:28px; }
 @media (prefers-reduced-motion: reduce) { .fly { display:none; } }
+.gi { width:1.15em; height:1.15em; object-fit:contain; vertical-align:-0.22em; display:inline-block; }
+.gi-round { border-radius:50%; object-fit:cover; }
+.fly .gi { width:64px; height:64px; }
+#banner .gi { width:1.2em; height:1.2em; }
+
+/* ---------- How to Play ---------- */
+#lobbyRules { margin-top:22px; background:rgba(42,29,59,.92); border:3px solid var(--line); border-radius:24px; padding:20px 26px; position:relative; min-height:250px; }
+#lobbyRules .kick { color:var(--warn); font-size:22px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+#lobbyRules h3 { margin:4px 0 8px; font-size:38px; display:flex; align-items:center; gap:14px; }
+#lobbyRules .body { font-size:26px; line-height:1.35; }
+#lobbyRules ul, #lobbyRules ol, #rulesBox ul, #rulesBox ol { margin:6px 0; padding-left:1.2em; }
+#lobbyRules li { margin:2px 0; }
+#lobbyRules p { margin:6px 0; }
+#lobbyRules .hide { position:absolute; top:16px; right:18px; background:transparent; border:2px solid var(--line); border-radius:12px; padding:6px 14px; font-size:20px; color:var(--muted); }
+#lobbyRules .gi, #rulesBox .body .gi { width:1.2em; height:1.2em; }
+#lobbyRules h3 .gi, #rulesBox h2 .gi { width:64px; height:64px; }
+ul.costs { list-style:none; padding:0 !important; }
+ul.costs li { display:flex; gap:12px; align-items:center; }
+ul.costs span { margin-left:auto; }
+.tvdots { display:flex; gap:10px; margin-top:12px; }
+.tvdots i { width:14px; height:14px; border-radius:50%; background:var(--line); }
+.tvdots i.on { background:var(--primary); }
+#corner { position:absolute; right:40px; top:36px; z-index:55; display:flex; gap:14px; }
+#game:not([hidden]) ~ #corner, #corner.ingame { top:auto; bottom:28px; right:40px; }
+#corner button { background:rgba(42,29,59,.92); border:2px solid var(--line); border-radius:16px; padding:12px 22px; font-size:26px; font-weight:800; }
+#rules { position:absolute; inset:0; z-index:58; background:rgba(15,10,22,.94); display:grid; place-items:center; }
+#rulesBox { width:1300px; background:var(--surface); border:4px solid var(--primary); border-radius:32px; padding:44px 56px; }
+#rulesBox .kick { color:var(--warn); font-size:26px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+#rulesBox h2 { font-size:64px; margin:6px 0 18px; display:flex; align-items:center; gap:20px; }
+#rulesBox .body { font-size:36px; line-height:1.4; min-height:380px; }
+#rulesBox .body .gi { width:1.35em !important; height:1.35em !important; }
+#rulesBox ul.costs li { padding:6px 0; border-bottom:2px solid var(--line); }
+#rulesBox .nav { display:flex; justify-content:space-between; align-items:center; margin-top:24px; }
+#rulesBox .nav button { background:var(--surface2); border:2px solid var(--line); border-radius:16px; padding:14px 30px; font-size:30px; font-weight:800; }
+#rulesBox .nav button.primary { background:var(--primary); color:var(--on-primary); border-color:var(--primary); }
+#rulesBox .hint { color:var(--muted); font-size:24px; }
 </style>
 </head>
 <body>
 <div id="stage">
   <section id="lobby" class="screen">
-    <div id="logo"><div class="t">Ragnagrok</div><div class="s">Lawn Care at the End of Days</div></div>
-    <div id="qrBox"><img id="qr" alt="Scan to join"></div>
+    <div id="lobbyLeft">
+      <div id="logo"><div class="t">Ragnagrok</div><div class="s">Lawn Care at the End of Days</div></div>
+      <div id="qrBox"><img id="qr" alt="Scan to join"></div>
+    </div>
     <div id="joinInfo">
       <div class="label">Scan the code, or go to</div>
       <div class="url" id="url">Connecting…</div>
       <div class="label" style="margin-top:30px">and enter</div>
       <div class="code" id="code">····</div>
       <div id="lobbyPlayers"></div>
+      <div id="lobbyRules" hidden></div>
     </div>
-    <div id="lobbyFoot"><span id="lobbyHint">Waiting for gardeners…</span><button class="smallbtn" id="newRoom">New room</button></div>
+    <div id="lobbyFoot" style="padding-left:380px"><span id="lobbyHint">Waiting for gardeners…</span><button class="smallbtn" id="newRoom">New room</button></div>
   </section>
 
   <section id="draft" class="screen" hidden>
@@ -186,8 +226,10 @@ button { font:inherit; color:inherit; cursor:pointer; border:0; }
 
   <section id="over" class="screen" hidden></section>
 
-  <div id="seven" hidden><div class="box"><h2>🚜 SURTUR'S LAWN MOWER</h2><div id="sevenText" style="margin-bottom:18px"></div><div class="list" id="sevenList"></div></div></div>
+  <div id="seven" hidden><div class="box"><h2><span id="sevenIcon">🚜</span> SURTUR'S LAWN MOWER</h2><div id="sevenText" style="margin-bottom:18px"></div><div class="list" id="sevenList"></div></div></div>
   <div id="pause" hidden><div><b>⏸</b><div id="pauseText" style="font-size:44px"></div></div></div>
+  <div id="rules" hidden><div id="rulesBox"></div></div>
+  <div id="corner"><button id="rulesBtn" aria-label="How to play">📖 Rules</button><button id="musicBtn" aria-label="Music on or off">🎵 Music</button></div>
   <div id="fx"></div>
   <div id="banner"></div>
   <div id="conn" hidden>Reconnecting to the server…</div>
@@ -197,6 +239,7 @@ button { font:inherit; color:inherit; cursor:pointer; border:0; }
 <script src="/socket.io/socket.io.js"></script>
 <script src="/sfx.js"></script>
 <script src="/board.js"></script>
+<script src="/rules.js"></script>
 <script>
 (() => {
 'use strict';
@@ -310,6 +353,7 @@ $('#newRoom').addEventListener('click', async () => {
 /* Browsers only allow sound after a click or key press on the page. */
 function unlockSound() {
   if (window.SFX) window.SFX.unlock();
+  Music.unlock();
   $('#soundGate').hidden = true;
 }
 $('#soundGate').addEventListener('click', unlockSound);
@@ -322,6 +366,7 @@ setInterval(() => { getJSON('/healthz'); }, 5 * 60 * 1000);
 /* ================= rendering ================= */
 const pl = seat => (view && view.players[seat]) || { name: '?', avatar: '❔', colour: '#999' };
 const nm = seat => esc(pl(seat).name);
+const I = (key, cls) => RagnaBoard.icon(ART, key, cls);
 const artImg = (slot, alt) => (ART[slot] ? `<img src="${ART[slot]}" alt="${esc(alt || '')}">` : '');
 const facName = id => { const f = cards.factions.find(x => x.id === id); return f ? f.name : id; };
 
@@ -334,7 +379,9 @@ function render() {
   $('#over').hidden = stage !== 'gameOver';
   $('#pause').hidden = !view.meta.paused;
   $('#pauseText').textContent = view.players.some(p => !p.connected) ? 'Paused · waiting for every phone to reconnect' : 'Paused by the host';
-  if (stage === 'lobby') renderLobby();
+  if (stage === 'lobby') { renderLobby(); renderLobbyRules(); }
+  $('#corner').classList.toggle('ingame', stage !== 'lobby');
+  Music.update();
   if (stage === 'factions') renderDraft();
   if (!$('#game').hidden) renderGame();
   if (stage === 'gameOver') renderOver();
@@ -412,7 +459,7 @@ function renderGame() {
   renderBoard();
   renderRows();
   const bank = view.bank;
-  $('#bankBox').innerHTML = `<span>🏦 Bank</span>${RES.map(r => `<span>${R[r]} ${bank.resources[r]}</span>`).join('')}<span>📜 ${bank.perksRemaining}</span>`;
+  $('#bankBox').innerHTML = `<span>${I('icon-bank')} Bank</span>${RES.map(r => `<span>${R[r]} ${bank.resources[r]}</span>`).join('')}<span>${I('icon-perk')} ${bank.perksRemaining}</span>`;
   renderTicker();
 }
 
@@ -430,8 +477,8 @@ function renderRows() {
   $('#rows').className = n > 5 ? 'compact' : '';
   $('#rows').innerHTML = view.players.map(x => {
     const badges = [];
-    if (view.awards.longestPath.holder === x.seat) badges.push('🛤️ Longest Path');
-    if (view.awards.largestMilitia.holder === x.seat) badges.push('🪖 Militia');
+    if (view.awards.longestPath.holder === x.seat) badges.push(I('icon-longestPath') + ' Longest Path');
+    if (view.awards.largestMilitia.holder === x.seat) badges.push(I('icon-militia') + ' Militia');
     let tag = '';
     if (p.step === 'discard') {
       tag = p.pendingDiscards[x.seat] ? `<span class="tag wait">discarding ${p.pendingDiscards[x.seat]}</span>` : '<span class="tag ok">safe</span>';
@@ -443,8 +490,8 @@ function renderRows() {
       <div class="bar" style="background:${x.colour}"></div>
       <div class="av">${esc(x.avatar)}</div>
       <div><div class="nm">${esc(x.name)} ${x.faction ? FACTION_ICON[x.faction] : ''} ${tag}</div>
-        <div class="st"><span class="${risky ? 'warn' : ''}">🃏 ${x.handCount}${risky ? ' ⚠️' : ''}</span><span>📜 ${x.perks.heldCount}</span>
-        ${x.militia ? `<span>🪖 ${x.militia}</span>` : ''}${badges.map(b => `<span>${b}</span>`).join('')}</div></div>
+        <div class="st"><span class="${risky ? 'warn' : ''}">${I('icon-cards')} ${x.handCount}${risky ? ' ⚠️' : ''}</span><span>${I('icon-perk')} ${x.perks.heldCount}</span>
+        ${x.militia ? `<span>${I('icon-militia')} ${x.militia}</span>` : ''}${badges.map(b => `<span>${b}</span>`).join('')}</div></div>
       <div class="vp">${x.vp.total !== undefined ? x.vp.total : x.vp.public}<small>VP</small></div></div>`;
   }).join('');
 }
@@ -487,7 +534,7 @@ function renderOver() {
       <div class="stats">
         <span>🎲 Hottest number: <b>${hot}</b> (×${counts[hot]})</span>
         ${robbedSeat !== undefined ? `<span>🫳 Most robbed: <b>${nm(Number(robbedSeat))}</b></span>` : ''}
-        ${view.awards.longestPath.holder !== null ? `<span>🛤️ Longest Path: <b>${nm(view.awards.longestPath.holder)}</b> (${view.awards.longestPath.length})</span>` : ''}
+        ${view.awards.longestPath.holder !== null ? `<span>${I('icon-longestPath')} Longest Path: <b>${nm(view.awards.longestPath.holder)}</b> (${view.awards.longestPath.length})</span>` : ''}
       </div>
       <div class="sub" style="margin-top:30px">${nm(0)} can start a rematch from their phone.</div>
     </div>`;
@@ -613,7 +660,7 @@ function steal(e) {
   sfx('steal');
   const from = stagePoint(document.querySelector(`.prow[data-seat="${e.from}"] .av`));
   const to = stagePoint(document.querySelector(`.prow[data-seat="${e.to}"] .av`));
-  for (let i = 0; i < e.count; i++) fly(e.hidden ? '🎭' : '🂠', from, to, 800, i * 150);
+  for (let i = 0; i < e.count; i++) fly(e.hidden ? I('deity-loki') : I('icon-cards'), from, to, 800, i * 150);
   return wait(700);
 }
 
@@ -632,16 +679,16 @@ function onEvent(e) {
     case 'turnStart': ghost = null; sfx('turnStart'); enqueue(() => banner(`${esc(pl(e.seat).avatar)} ${nm(e.seat)}'s turn`, '', 1000)); break;
     case 'dice': enqueue(() => rollDice(e.dice), true); break;
     case 'production': enqueue(() => production(e), true); break;
-    case 'mower': enqueue(async () => { sfx('mower'); await banner("🚜 It's a 7!", '', 1100); }, true); break;
+    case 'mower': enqueue(async () => { sfx('mower'); await banner(`${I('mower')} It's a 7!`, '', 1100); }, true); break;
     case 'steal': enqueue(() => steal(e), true); break;
     case 'buildPath': sfx('buildPath'); ghost = null; break;
     case 'buildShack': sfx('buildShack'); ghost = null; break;
-    case 'buildManor': sfx('buildManor'); ghost = null; enqueue(() => banner(`🏰 ${nm(e.seat)} builds a Garden Manor`, 'small', 1100)); break;
+    case 'buildManor': sfx('buildManor'); ghost = null; enqueue(() => banner(`${I('piece-manor')} ${nm(e.seat)} builds a Garden Manor`, 'small', 1100)); break;
     case 'mowerMoved': ghost = null; break;
     case 'sinkhole': ghost = null; enqueue(async () => { sfx('sinkhole'); shake(); await banner('🕳️ Suburban Sinkhole!', '', 1300); }, true); break;
     case 'award': enqueue(async () => {
       sfx('award');
-      const what = e.award === 'longestPath' ? '🛤️ Longest Mulch Path' : '🪖 Largest Gnome Militia';
+      const what = e.award === 'longestPath' ? I('icon-longestPath') + ' Longest Mulch Path' : I('icon-militia') + ' Largest Gnome Militia';
       await banner(e.holder === null ? `${what} is up for grabs` : `${what}: ${nm(e.holder)}`, 'gold', 1600);
     }, true); break;
     case 'perkPlayed': enqueue(() => banner(`${nm(e.seat)} plays ${PERK_NAMES[e.perk] || 'a Perk'}`, 'small', 1200)); break;
@@ -652,7 +699,7 @@ function onEvent(e) {
     case 'bankTrade': sfx('tradeAccepted'); break;
     case 'perkBought': sfx('tap'); break;
     case 'specialBuild': enqueue(() => banner('⏱️ Quick build window', 'small', 900)); break;
-    case 'win': enqueue(async () => { sfx('win'); await banner('🦩 THE GOLDEN FLAMINGO 🦩', 'gold', 2200); }, true); break;
+    case 'win': enqueue(async () => { sfx('win'); await banner(`${I('trophy')} THE GOLDEN FLAMINGO ${I('trophy')}`, 'gold', 2200); }, true); break;
     case 'rematch': enqueue(() => banner('Rematch! Same yard, fresh lawn', 'gold', 1400), true); break;
     case 'paused': sfx('denied'); break;
     case 'resumed': sfx('turnStart'); break;
@@ -660,10 +707,121 @@ function onEvent(e) {
   }
 }
 
+/* ================= How to Play ================= */
+const TIPS_KEY = 'ragnagrok.tvTipsHidden';
+let tipIndex = 0;
+let rulesPage = 0;
+
+function renderLobbyRules() {
+  const box = $('#lobbyRules');
+  if (store.get(TIPS_KEY)) { box.hidden = true; return; }
+  const slides = RagnaRules.slides(I);
+  const sl = slides[tipIndex % slides.length];
+  box.hidden = false;
+  box.innerHTML = `<button class="hide" id="tipsHide">Don't show again</button>
+    <div class="kick">How to play · ${tipIndex % slides.length + 1} of ${slides.length}</div>
+    <h3>${sl.icon} ${esc(sl.title)}</h3><div class="body">${sl.body}</div>
+    <div class="tvdots">${slides.map((x, k) => `<i class="${k === tipIndex % slides.length ? 'on' : ''}"></i>`).join('')}</div>`;
+  $('#tipsHide').onclick = () => { store.set(TIPS_KEY, true); renderLobbyRules(); };
+}
+setInterval(() => {
+  if (!view || view.phase.stage !== 'lobby' || store.get(TIPS_KEY)) return;
+  tipIndex += 1;
+  renderLobbyRules();
+}, 11000);
+
+function openRules(page) {
+  rulesPage = page || 0;
+  $('#rules').hidden = false;
+  renderRulesBox();
+}
+function closeRules() { $('#rules').hidden = true; }
+function renderRulesBox() {
+  const slides = RagnaRules.slides(I);
+  rulesPage = Math.max(0, Math.min(slides.length - 1, rulesPage));
+  const sl = slides[rulesPage];
+  const last = rulesPage === slides.length - 1;
+  $('#rulesBox').innerHTML = `<div class="kick">How to play · ${rulesPage + 1} of ${slides.length}</div>
+    <h2>${sl.icon} ${esc(sl.title)}</h2><div class="body">${sl.body}</div>
+    <div class="nav"><button id="rPrev"${rulesPage === 0 ? ' disabled' : ''}>◀ Back</button>
+      <span class="hint">Arrow keys to move · R or Esc to close</span>
+      <button id="rNext" class="primary">${last ? 'Close' : 'Next ▶'}</button></div>`;
+  $('#rPrev').onclick = () => { rulesPage -= 1; renderRulesBox(); };
+  $('#rNext').onclick = () => { if (last) closeRules(); else { rulesPage += 1; renderRulesBox(); } };
+}
+$('#rulesBtn').addEventListener('click', () => ($('#rules').hidden ? openRules(0) : closeRules()));
+$('#rules').addEventListener('click', e => { if (e.target === $('#rules')) closeRules(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { $('#rules').hidden ? openRules(0) : closeRules(); return; }
+  if ($('#rules').hidden) return;
+  if (e.key === 'Escape') closeRules();
+  if (e.key === 'ArrowRight') { rulesPage += 1; renderRulesBox(); }
+  if (e.key === 'ArrowLeft') { rulesPage -= 1; renderRulesBox(); }
+});
+
+/* ================= music ================= */
+/* Two looping tracks on the TV only: intro (lobby, draft, winner) and ambience (during play).
+   Files go in public/audio as music-intro.mp3 and music-ambience.mp3. */
+const MUSIC_KEY = 'ragnagrok.tvMusicOff';
+const Music = {
+  tracks: {}, current: null, unlocked: false, off: !!store.get(MUSIC_KEY),
+  levels: { intro: 0.55, ambience: 0.28 },
+  load(map) {
+    [['intro', 'music-intro'], ['ambience', 'music-ambience']].forEach(([k, slot]) => {
+      if (!map[slot] || this.tracks[k]) return;
+      const a = new Audio(map[slot]);
+      a.loop = true;
+      a.preload = 'auto';
+      a.volume = 0;
+      this.tracks[k] = a;
+    });
+    this.update();
+  },
+  scene() {
+    if (!view) return 'intro';
+    return ['setup', 'playing'].includes(view.phase.stage) ? 'ambience' : 'intro';
+  },
+  fade(a, to, ms) {
+    if (!a) return;
+    const from = a.volume;
+    const start = performance.now();
+    const step = t => {
+      const k = Math.min(1, (t - start) / ms);
+      a.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+      if (k < 1) requestAnimationFrame(step);
+      else if (to === 0) a.pause();
+    };
+    requestAnimationFrame(step);
+  },
+  update() {
+    $('#musicBtn').textContent = this.off ? '🔇 Music' : '🎵 Music';
+    $('#musicBtn').hidden = !Object.keys(this.tracks).length;
+    if (!this.unlocked) return;
+    const want = this.off || (view && view.meta && view.meta.paused) ? null : this.scene();
+    if (want === this.current) return;
+    if (this.current && this.tracks[this.current]) this.fade(this.tracks[this.current], 0, 1500);
+    this.current = want;
+    const t = want && this.tracks[want];
+    if (t) {
+      const p = t.play();
+      if (p && p.catch) p.catch(() => {});
+      this.fade(t, this.levels[want], 2000);
+    }
+  },
+  unlock() { this.unlocked = true; this.current = null; this.update(); },
+  toggle() { this.off = !this.off; store.set(MUSIC_KEY, this.off); this.current = null; Object.values(this.tracks).forEach(a => this.fade(a, 0, 600)); this.update(); }
+};
+$('#musicBtn').addEventListener('click', e => { e.stopPropagation(); Music.toggle(); });
+document.addEventListener('keydown', e => { if (e.key === 'm' || e.key === 'M') Music.toggle(); });
+
 /* ================= boot ================= */
 getJSON('/data/cards.json').then(c => { if (c) { cards = c; render(); } });
 getJSON('/art.json').then(a => {
   ART = RagnaBoard.artMap(a);
+  Object.keys(R).forEach(r => { R[r] = I('res-' + r); });
+  Object.keys(FACTION_ICON).forEach(k => { FACTION_ICON[k] = I('deity-' + k); });
+  $('#sevenIcon').innerHTML = I('mower');
+  Music.load(RagnaBoard.audioMap(a));
   if (ART['background-tv']) { $('#stage').classList.add('bgart'); $('#stage').style.backgroundImage = `url(${ART['background-tv']})`; }
   lastBoardKey = '';
   render();
