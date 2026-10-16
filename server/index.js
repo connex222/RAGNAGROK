@@ -8,6 +8,7 @@
      PUBLIC_URL    force the join link, e.g. https://ragnagrok.onrender.com
      IDLE_MINUTES  delete rooms nobody has touched for this long (default 30) */
 
+const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -38,6 +39,21 @@ function startServer({
   });
 
   app.get('/play', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'play.html')));
+  // Lists the artwork in public/img so screens only ask for images that exist.
+  const IMG_DIR = path.join(PUBLIC_DIR, 'img');
+  let artCache = { at: 0, files: [] };
+  app.get('/art.json', (req, res) => {
+    if (Date.now() - artCache.at > 30000) {
+      let files = [];
+      try {
+        files = fs.readdirSync(IMG_DIR).filter(f => /\.(png|webp|jpe?g|svg)$/i.test(f));
+      } catch (e) { /* no img folder yet */ }
+      artCache = { at: Date.now(), files };
+    }
+    res.set('Cache-Control', 'no-cache');
+    res.json({ files: artCache.files });
+  });
+
   app.get('/data/cards.json', (req, res) => {
     res.set('Cache-Control', 'public, max-age=300');
     res.sendFile(path.join(__dirname, '..', 'src', 'data', 'cards.json'));

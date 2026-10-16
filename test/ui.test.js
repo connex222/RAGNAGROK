@@ -7,7 +7,6 @@
 
 const assert = require('assert');
 const { JSDOM, VirtualConsole } = require('jsdom');
-const { io: connect } = require('socket.io-client');
 const { startServer } = require('../server/index');
 const { next } = require('../src/engine/rng');
 
@@ -25,7 +24,7 @@ async function openPhone(url, label) {
   const dom = await JSDOM.fromURL(url, { runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true, virtualConsole: vc });
   const win = dom.window;
   win.addEventListener('error', e => errors.push(`${label}: ${e.message}`));
-  await waitFor(() => win.__rg && win.io, `${label} page to load`, 10000);
+  await waitFor(() => (win.__rg || win.__rgtv) && win.io, `${label} page to load`, 10000);
   return { dom, win, label, doc: win.document };
 }
 
@@ -165,11 +164,13 @@ async function main() {
   const base = `http://localhost:${srv.port}`;
   console.log('Phone UI test');
 
-  const tv = connect(base, { transports: ['websocket'], forceNew: true });
-  await waitFor(() => tv.connected, 'TV socket');
-  const room = await tv.emitWithAck('tv:create', {});
-  let tvVersion = 0;
-  tv.on('state', s => { tvVersion = s.stateVersion; });
+  // The real TV page, in its own headless browser.
+  const tvp = await openPhone(`${base}/`, 'tv');
+  await waitFor(() => /^[A-Z]{4}$/.test(q(tvp, '#code').textContent.trim()), 'TV to show a room code');
+  assert.ok(q(tvp, '#qr').src.startsWith('data:image/png'), 'TV shows a QR code');
+  const room = { code: q(tvp, '#code').textContent.trim() };
+  const tvView = () => tvp.win.__rgtv.view();
+  console.log(`  ✔ TV page opened room ${room.code} with a QR code`);
 
   const phones = [];
   for (let i = 0; i < 3; i++) {
@@ -183,6 +184,8 @@ async function main() {
     phones.push(p);
   }
   console.log('  ✔ three phones joined through the join screen');
+  await waitFor(() => qa(tvp, '#lobbyPlayers .pchip:not(.empty)').length === 3, 'TV lobby to list 3 players');
+  console.log('  ✔ TV lobby shows every player as they join');
 
   const host = phones[0];
   await waitFor(() => view(host).players.length === 3 && enabled(q(host, '[data-act="start"]')), 'host Start button');
@@ -192,7 +195,8 @@ async function main() {
   console.log('  ✔ host started the game; only the host saw Start');
 
   let lastProgress = Date.now();
-  let lastVersion = tvVersion;
+  let lastVersion = tvView().stateVersion;
+  let tvChecked = false;
   let taps = 0;
   const seenSheets = new Set();
   const seenSteps = new Set();
@@ -205,7 +209,14 @@ async function main() {
     }
     phones.forEach(checkScreen);
     if (errors.length) throw new Error('Page error:\n' + errors.join('\n'));
+    const tvVersion = tvView().stateVersion;
     if (tvVersion !== lastVersion) { lastVersion = tvVersion; lastProgress = Date.now(); }
+    if (!tvChecked && tvView().phase.stage === 'playing') {
+      assert.ok(!q(tvp, '#game').hidden, 'TV shows the game screen');
+      assert.strictEqual(qa(tvp, '#rows .prow').length, 3, 'TV scoreboard has a row per player');
+      assert.ok(q(tvp, '#boardWrap svg') && qa(tvp, '#boardWrap [data-hex]').length === 19, 'TV draws all 19 hexes');
+      tvChecked = true;
+    }
     if (Date.now() - lastProgress > 8000) {
       const v = view(host);
       throw new Error(`No progress for 8s at ${v.phase.stage}/${v.phase.step}, active seat ${v.phase.activeSeat}`);
@@ -222,6 +233,8 @@ async function main() {
   assert.ok(q(host, '[data-act="rematch"]'), 'host sees Rematch');
   assert.ok(!q(phones[1], '[data-act="rematch"]'), 'non-host has no Rematch');
   console.log('  ✔ game-over screen on every phone, Rematch for the host only');
+  await waitFor(() => !q(tvp, '#over').hidden && q(tvp, '#over').textContent.includes('wins'), 'TV winner screen');
+  console.log('  ✔ TV showed the board and scoreboard all game, then the winner screen');
 
   tap(host, q(host, '[data-act="rematch"]'));
   await waitFor(() => phones.every(p => view(p).phase.stage === 'lobby'), 'rematch lobby');
@@ -235,7 +248,7 @@ async function main() {
   console.log('  ✔ a reloaded phone rejoins its own seat with no typing');
 
   if (errors.length) throw new Error('Page error:\n' + errors.join('\n'));
-  tv.close();
+  tvp.win.close();
   phones.forEach(p => p.win.close());
   reopened.win.close();
   await srv.close();

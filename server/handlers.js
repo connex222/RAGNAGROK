@@ -153,6 +153,22 @@ function attachHandlers(io, rooms, { rate = DEFAULT_RATE } = {}) {
       return { ok: true };
     });
 
+    /* Live "ghost" preview: the TV shows where a player is about to build. */
+    const PREVIEW_KINDS = ['shack', 'path', 'manor', 'mower', 'sinkhole'];
+    on('player:preview', ({ what, at }) => {
+      const room = currentRoom();
+      if (!room || socket.data.role !== 'player') return { ok: false };
+      const seat = rooms.seatOf(room, socket);
+      if (seat < 0) return { ok: false };
+      const clean = {
+        seat,
+        what: PREVIEW_KINDS.includes(what) ? what : null,
+        at: typeof at === 'string' && at.length <= 8 ? at : null
+      };
+      room.sockets.forEach(s => { if (s.data.role === 'tv') s.emit('preview', clean); });
+      return { ok: true };
+    });
+
     /* ---------- host controls ---------- */
 
     const hostOnly = fn => payload => {
