@@ -38,6 +38,10 @@ function startServer({
   });
 
   app.get('/play', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'play.html')));
+  app.get('/data/cards.json', (req, res) => {
+    res.set('Cache-Control', 'public, max-age=300');
+    res.sendFile(path.join(__dirname, '..', 'src', 'data', 'cards.json'));
+  });
   app.use(express.static(PUBLIC_DIR, {
     extensions: ['html'],
     setHeaders(res, file) {

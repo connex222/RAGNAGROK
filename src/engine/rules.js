@@ -1305,6 +1305,7 @@ function privateView(state, seat) {
     vp: { ...p.vp },
     freePaths: p.freePaths,
     thorUsed: p.thorUsed,
+    playedPerkThisTurn: p.playedPerkThisTurn,
     odinChoice: state.secrets.odinChoice[seat] ? state.secrets.odinChoice[seat].map(card) : null,
     stealPeek,
     trades: state.trades
