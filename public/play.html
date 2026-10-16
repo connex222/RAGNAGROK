@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ragnagrok · Phone</title>
+<style>
+  :root { --bg:#1c1328; --panel:#2a1d3b; --ink:#f6efe2; --muted:#c7b9d6; --ember:#ff8a4c; --turf:#8cc45e; color-scheme:dark;
+          box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:400 18px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:480px; margin:0 auto; padding:20px; }
+  h1 { color:var(--ember); font-size:28px; margin:8px 0 16px; }
+  label { display:block; font-weight:700; margin:14px 0 6px; }
+  input { width:100%; font:inherit; padding:14px; border-radius:12px; border:2px solid var(--muted); background:var(--panel); color:var(--ink); }
+  #code { text-transform:uppercase; letter-spacing:.3em; font-weight:800; }
+  button { width:100%; min-height:56px; font:inherit; font-weight:800; border-radius:14px; border:0; background:var(--ember); color:#1c1328; margin-top:18px; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--ink); border:2px solid var(--muted); }
+  .card { background:var(--panel); border-radius:16px; padding:16px; margin-top:12px; }
+  .hand { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; text-align:center; font-size:22px; }
+  .muted { color:var(--muted); }
+  .err { color:#ff9c9c; min-height:1.4em; }
+  [hidden] { display:none !important; }
+  :focus-visible { outline:3px solid var(--turf); outline-offset:3px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ragnagrok</h1>
+
+  <section id="joinView">
+    <label for="code">Room code</label>
+    <input id="code" maxlength="4" autocomplete="off" inputmode="text">
+    <label for="name">Your name</label>
+    <input id="name" maxlength="16" autocomplete="nickname">
+    <button id="join">Join yard</button>
+  </section>
+
+  <section id="gameView" hidden>
+    <div class="card">
+      <strong id="who"></strong>
+      <div class="muted" id="stage"></div>
+    </div>
+    <div class="card hand" id="hand" hidden></div>
+    <button id="start" hidden>Start game</button>
+    <button id="leave" class="ghost" hidden>Leave</button>
+  </section>
+
+  <p class="err" id="err" role="alert"></p>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+  const KEY = 'ragnagrok.player';
+  const $ = id => document.getElementById(id);
+  const socket = io({ transports: ['websocket', 'polling'] });
+  const params = new URLSearchParams(location.search);
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (params.get('room')) $('code').value = params.get('room').toUpperCase();
+  try { $('name').value = localStorage.getItem('ragnagrok.name') || ''; } catch (e) {}
+
+  const show = joined => { $('joinView').hidden = joined; $('gameView').hidden = !joined; };
+  const forget = () => { saved = null; try { localStorage.removeItem(KEY); } catch (e) {} show(false); };
+
+  async function rejoin() {
+    const wanted = params.get('room');
+    if (!saved || (wanted && wanted.toUpperCase() !== saved.code)) return;
+    const r = await socket.emitWithAck('player:rejoin', saved);
+    if (r.ok) show(true); else forget();
+  }
+
+  socket.on('connect', rejoin);
+  socket.on('kicked', () => { forget(); $('err').textContent = 'You were removed from the game.'; });
+  socket.on('roomClosed', () => { forget(); $('err').textContent = 'The host closed the room.'; });
+
+  $('join').addEventListener('click', async () => {
+    $('err').textContent = '';
+    const code = $('code').value.trim().toUpperCase();
+    const name = $('name').value.trim();
+    try { localStorage.setItem('ragnagrok.name', name); } catch (e) {}
+    const r = await socket.emitWithAck('player:join', { code, name, avatar: '🌱' });
+    if (!r.ok) { $('err').textContent = r.error; return; }
+    saved = { code: r.code, token: r.token };
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+    show(true);
+  });
+
+  socket.on('state', s => {
+    const me = s.me;
+    const p = s.players[me.seat];
+    $('who').textContent = `${p.avatar} ${p.name} · seat ${me.seat + 1}${s.meta.isHost ? ' · host' : ''}`;
+    $('stage').textContent = s.meta.paused ? 'Paused' : `Stage: ${s.phase.stage}${s.phase.step ? ' · ' + s.phase.step : ''}`;
+    const inLobby = s.phase.stage === 'lobby';
+    $('start').hidden = !(inLobby && s.meta.isHost);
+    $('leave').hidden = !inLobby;
+    $('hand').hidden = inLobby;
+    $('hand').innerHTML = `<div>🍄<br>${me.hand.compost}</div><div>🌾<br>${me.hand.fertilizer}</div><div>🔥<br>${me.hand.sprinklers}</div><div>🌳<br>${me.hand.turf}</div><div>✨<br>${me.hand.gnomeDust}</div>`;
+  });
+
+  $('start').addEventListener('click', async () => {
+    const r = await socket.emitWithAck('host:start', {});
+    $('err').textContent = r.ok ? '' : r.error;
+  });
+  $('leave').addEventListener('click', async () => {
+    await socket.emitWithAck('player:leave', {});
+    forget();
+  });
+})();
+</script>
+</body>
+</html>

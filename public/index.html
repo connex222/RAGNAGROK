@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ragnagrok · TV</title>
+<style>
+  :root { --bg:#1c1328; --panel:#2a1d3b; --ink:#f6efe2; --muted:#c7b9d6; --ember:#ff8a4c; --turf:#8cc45e; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font:400 22px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif; display:grid; place-items:center; padding:4vh 4vw; }
+  main { width:min(1200px,100%); display:grid; grid-template-columns:auto 1fr; gap:48px; align-items:center; }
+  h1 { grid-column:1/-1; margin:0; color:var(--ember); font-size:clamp(32px,4vw,56px); }
+  .qr { background:#fff; padding:16px; border-radius:16px; width:clamp(220px,24vw,340px); aspect-ratio:1; }
+  .qr img { width:100%; height:100%; display:block; image-rendering:pixelated; }
+  .code { font-size:clamp(56px,8vw,120px); font-weight:800; letter-spacing:.18em; margin:0; }
+  .url { color:var(--muted); word-break:break-all; margin:0 0 24px; }
+  ul { list-style:none; padding:0; margin:0 0 24px; display:flex; flex-wrap:wrap; gap:12px; }
+  li { background:var(--panel); border-radius:12px; padding:10px 16px; }
+  li.off { opacity:.45; }
+  .status { color:var(--turf); margin:0 0 16px; }
+  button { font:inherit; font-weight:700; padding:14px 24px; border-radius:12px; border:0; background:var(--ember); color:#1c1328; cursor:pointer; margin-right:12px; }
+  button.ghost { background:transparent; color:var(--ink); border:2px solid var(--muted); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  :focus-visible { outline:3px solid var(--turf); outline-offset:3px; }
+  .err { color:#ff9c9c; min-height:1.4em; }
+  @media (max-width:760px){ main{ grid-template-columns:1fr; text-align:center; } ul{ justify-content:center; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ragnagrok · server check</h1>
+  <div class="qr"><img id="qr" alt="QR code to join"></div>
+  <div>
+    <p class="code" id="code">····</p>
+    <p class="url" id="url">Connecting…</p>
+    <p class="status" id="status"></p>
+    <ul id="players"></ul>
+    <button id="start" disabled>Start game</button>
+    <button id="newRoom" class="ghost">New room</button>
+    <p class="err" id="err" role="alert"></p>
+  </div>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+  const KEY = 'ragnagrok.tv';
+  const $ = id => document.getElementById(id);
+  const socket = io({ transports: ['websocket', 'polling'] });
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+
+  function showRoom(r) {
+    $('code').textContent = r.code;
+    $('url').textContent = r.joinUrl;
+    $('qr').src = r.qr;
+  }
+
+  async function create() {
+    const r = await socket.emitWithAck('tv:create', {});
+    if (!r.ok) { $('err').textContent = r.error; return; }
+    saved = { code: r.code, hostKey: r.hostKey };
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+    showRoom(r);
+  }
+
+  async function connect() {
+    $('err').textContent = '';
+    if (saved && saved.code) {
+      const r = await socket.emitWithAck('tv:attach', saved);
+      if (r.ok) { showRoom(r); return; }
+    }
+    await create();
+  }
+
+  socket.on('connect', connect);
+  socket.on('disconnect', () => { $('status').textContent = 'Reconnecting…'; });
+  socket.on('roomClosed', () => { saved = null; create(); });
+
+  socket.on('state', s => {
+    const stage = s.phase.stage;
+    $('status').textContent = s.meta.paused ? 'Paused' : `Stage: ${stage}${s.phase.step ? ' · ' + s.phase.step : ''}`;
+    $('players').innerHTML = '';
+    s.players.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = `${p.avatar} ${p.name}${p.faction ? ' · ' + p.faction : ''}${stage !== 'lobby' ? ' · ' + p.vp.public + ' VP' : ''}`;
+      if (!p.connected) li.className = 'off';
+      $('players').appendChild(li);
+    });
+    $('start').disabled = !(stage === 'lobby' && s.players.length >= 2 && s.meta.isHost);
+  });
+
+  $('start').addEventListener('click', async () => {
+    const r = await socket.emitWithAck('host:start', {});
+    $('err').textContent = r.ok ? '' : r.error;
+  });
+  $('newRoom').addEventListener('click', async () => {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    saved = null;
+    await create();
+  });
+
+  // Keeps a free Render server awake while the TV page is open.
+  setInterval(() => fetch('/healthz', { cache: 'no-store' }).catch(() => {}), 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>

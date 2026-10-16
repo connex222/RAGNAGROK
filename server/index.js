@@ -1,0 +1,89 @@
+'use strict';
+/* Ragnagrok server.
+   Works unchanged on Render, Oracle or a laptop.
+
+   Environment variables (all optional):
+     PORT          set automatically by Render; defaults to 3000
+     SAVE_DIR      folder to save games in (use on Oracle; leave unset on Render free)
+     PUBLIC_URL    force the join link, e.g. https://ragnagrok.onrender.com
+     IDLE_MINUTES  delete rooms nobody has touched for this long (default 30) */
+
+const path = require('path');
+const http = require('http');
+const express = require('express');
+const { Server } = require('socket.io');
+const { RoomManager } = require('./rooms');
+const { attachHandlers } = require('./handlers');
+
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+
+function startServer({
+  port = Number(process.env.PORT) || 3000,
+  saveDir = process.env.SAVE_DIR || null,
+  idleMinutes = Number(process.env.IDLE_MINUTES) || 30,
+  tickMs = 1000,
+  quiet = false,
+  rate = undefined
+} = {}) {
+  const logger = quiet ? { log() {}, error() {} } : console;
+  const app = express();
+  app.disable('x-powered-by');
+
+  const rooms = new RoomManager({ saveDir, idleMinutes, logger });
+  const restored = rooms.loadAll();
+
+  app.get('/healthz', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, rooms: rooms.rooms.size, uptime: Math.round(process.uptime()) });
+  });
+
+  app.get('/play', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'play.html')));
+  app.use(express.static(PUBLIC_DIR, {
+    extensions: ['html'],
+    setHeaders(res, file) {
+      // Pages always fresh so an update reaches every phone; assets can cache.
+      res.set('Cache-Control', file.endsWith('.html') ? 'no-cache' : 'public, max-age=3600');
+    }
+  }));
+
+  const server = http.createServer(app);
+  const io = new Server(server, {
+    maxHttpBufferSize: 16 * 1024,
+    pingInterval: 10000,
+    pingTimeout: 8000,
+    serveClient: true
+  });
+  attachHandlers(io, rooms, rate ? { rate } : {});
+
+  const timer = setInterval(() => rooms.tickAll(), tickMs);
+
+  function close() {
+    clearInterval(timer);
+    rooms.saveAll();
+    return new Promise(resolve => {
+      io.close(() => resolve());
+    });
+  }
+
+  return new Promise(resolve => {
+    server.listen(port, () => {
+      const actual = server.address().port;
+      logger.log(`Ragnagrok server on port ${actual}${saveDir ? `, saving to ${saveDir}` : ''}${restored ? `, restored ${restored} game(s)` : ''}`);
+      resolve({ app, server, io, rooms, port: actual, close });
+    });
+  });
+}
+
+if (require.main === module) {
+  startServer().then(({ close }) => {
+    const shutdown = signal => {
+      console.log(`${signal} received: saving games and shutting down`);
+      close().then(() => process.exit(0));
+      setTimeout(() => process.exit(0), 5000).unref();
+    };
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+  });
+}
+
+module.exports = { startServer };
